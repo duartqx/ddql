@@ -1,4 +1,4 @@
-package io.github.duartqx.ddql.select
+package io.github.duartqx.ddql.sql
 
 import io.github.duartqx.ddql.expr.As.`as`
 import io.github.duartqx.ddql.expr.Eq.eq
@@ -8,7 +8,7 @@ import io.github.duartqx.ddql.sql
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class SelectTest {
+class SqlTest {
   @Test
   fun `select all columns`() {
     assertEquals(

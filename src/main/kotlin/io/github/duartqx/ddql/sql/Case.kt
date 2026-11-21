@@ -1,4 +1,4 @@
-package io.github.duartqx.ddql.select
+package io.github.duartqx.ddql.sql
 
 import io.github.duartqx.ddql.expr.Expr
 import io.github.duartqx.ddql.interfaces.Statement
