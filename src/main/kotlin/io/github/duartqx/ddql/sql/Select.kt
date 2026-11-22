@@ -18,7 +18,7 @@ public open class Select(vararg columns: Any) : Statement {
   private var groupByClause = ""
   private var havingClause = ""
 
-  private val ctes = mutableListOf<Pair<String, Statement>>()
+  private var cte: Cte? = null
   private val joins = mutableListOf<JoinStatement>()
   private val orderBys = mutableListOf<OrderStatement>()
 
@@ -32,8 +32,16 @@ public open class Select(vararg columns: Any) : Statement {
    * @param stmt The builder used to construct the CTE query.
    * @return This query instance.
    */
-  public fun with(alias: String, stmt: Statement): Select = apply {
-    ctes.add(alias to stmt)
+  public fun with(vararg statements: CteStatement): Select = apply {
+    cte = statements.toList().toCte()
+  }
+
+  public fun with(cte: Cte): Select = apply {
+    this.cte = cte
+  }
+
+  public fun with(recursive: RecursiveCte): Select = apply {
+    cte = recursive
   }
 
   /**
@@ -108,7 +116,7 @@ public open class Select(vararg columns: Any) : Statement {
    * @return The generated SQL query.
    */
   public override fun toString(): String = buildList {
-    if (ctes.isNotEmpty()) add(ctes.toStatementString())
+    cte?.let { add(it.toStatementString()) }
 
     add("select $selection")
     if (table.isNotEmpty()) add("from $table")
@@ -129,19 +137,6 @@ public open class Select(vararg columns: Any) : Statement {
    */
   public override fun toStatementString(): String = toString()
 }
-
-/**
- * Converts CTE definitions into a SQL WITH clause.
- *
- * Each entry consists of a CTE alias and its corresponding statement.
- *
- * @return The formatted WITH clause.
- */
-@JvmName("cteMutableListToStatementString")
-internal fun MutableList<Pair<String, Statement>>.toStatementString(): String =
-    joinToString(", ", prefix = "with ") { (alias, sql) ->
-      "$alias as ($sql)"
-    }
 
 /**
  * Converts ordering definitions into a SQL ORDER BY clause.

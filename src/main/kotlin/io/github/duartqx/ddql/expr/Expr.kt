@@ -65,6 +65,8 @@ public object As {
    * @return A pair containing the original expression and its alias.
    */
   public infix fun String.`as`(alias: String): Pair<String, String> = this to alias
+
+  public infix fun String.`as`(stmt: Statement): Pair<String, Statement> = this to stmt
 }
 
 /** Provides SQL equality comparison operators. */
