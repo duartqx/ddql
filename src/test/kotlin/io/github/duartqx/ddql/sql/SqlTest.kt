@@ -4,7 +4,8 @@ import io.github.duartqx.ddql.expr.As.`as`
 import io.github.duartqx.ddql.expr.Eq.eq
 import io.github.duartqx.ddql.expr.Gt.gt
 import io.github.duartqx.ddql.expr.Neq.neq
-import io.github.duartqx.ddql.sql
+import io.github.duartqx.ddql.select
+import io.github.duartqx.ddql.stmt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -13,7 +14,12 @@ class SqlTest {
   fun `select all columns`() {
     assertEquals(
         "select * from users where id = :id",
-        sql { select() from ("users") where eq("id") },
+        stmt {
+          select {
+            from("users")
+            where(eq("id"))
+          }
+        },
     )
   }
 
@@ -21,7 +27,12 @@ class SqlTest {
   fun `select only id`() {
     assertEquals(
         "select id from users where id = :id",
-        sql { select("id") from ("users") where (eq("id")) },
+        stmt {
+          select("id") {
+            from("users")
+            where(eq("id"))
+          }
+        },
     )
   }
 
@@ -29,10 +40,11 @@ class SqlTest {
   fun `select only id and name`() {
     assertEquals(
         "select id, name from users where id = :id",
-        sql {
-          select("id", "name")
-          from("users")
-          where(eq("id"))
+        stmt {
+          select("id", "name") {
+            from("users")
+            where(eq("id"))
+          }
         },
     )
   }
@@ -44,10 +56,11 @@ class SqlTest {
           append("select id, name as first_name from users ")
           append("where (id = :id and name != :name)")
         },
-        sql {
-          select("id", "name" `as` "first_name")
-          from("users")
-          where(eq("id") and neq("name"))
+        stmt {
+          select("id", "name" `as` "first_name") {
+            from("users")
+            where(eq("id") and neq("name"))
+          }
         },
     )
   }
@@ -59,10 +72,11 @@ class SqlTest {
           append("select id, name as first_name from users ")
           append("where (id = :id or name != :name)")
         },
-        sql {
-          select("id", "name" `as` "first_name")
-          from("users")
-          where(eq("id") or neq("name"))
+        stmt {
+          select("id", "name" `as` "first_name") {
+            from("users")
+            where(eq("id") or neq("name"))
+          }
         },
     )
   }
@@ -71,10 +85,11 @@ class SqlTest {
   fun `select all columns with join`() {
     assertEquals(
         "select * from users as u join posts as p on p.user_id = u.id",
-        sql {
-          select()
-          from(("users" `as` "u"))
-          join(inner("posts" `as` "p") on ("p.user_id" eq "u.id"))
+        stmt {
+          select {
+            from(("users" `as` "u"))
+            join(inner("posts" `as` "p") on ("p.user_id" eq "u.id"))
+          }
         },
     )
   }
@@ -89,21 +104,23 @@ class SqlTest {
 
     assertEquals(
         expected,
-        sql {
-          select()
-          from("users" `as` "u")
-          join(inner("posts" `as` "p") on ("p.user_id" eq "u.id"))
-          where("u.id" eq ":uid")
+        stmt {
+          select {
+            from("users" `as` "u")
+            join(inner("posts" `as` "p") on ("p.user_id" eq "u.id"))
+            where("u.id" eq ":uid")
+          }
         },
     )
 
     assertEquals(
         expected,
-        sql {
-          select()
-          from("users" `as` "u")
-          join(inner("posts" `as` "p").on("p.user_id" eq "u.id"))
-          where("u.id" eq ":uid")
+        stmt {
+          select {
+            from("users" `as` "u")
+            join(inner("posts" `as` "p").on("p.user_id" eq "u.id"))
+            where("u.id" eq ":uid")
+          }
         },
     )
   }
@@ -115,15 +132,18 @@ class SqlTest {
           append("with u as (select count(*) as total, name from users group by name) ")
           append("select * from u where u.total > 100")
         },
-        sql {
-          with("u") {
-            select("count(*)" `as` "total", "name")
-            from("users")
-            groupBy("name")
+        stmt {
+          select {
+            with(
+                "u",
+                select("count(*)" `as` "total", "name") {
+                  from("users")
+                  groupBy("name")
+                },
+            )
+            from("u")
+            where("u.total" gt 100)
           }
-          select()
-          from("u")
-          where("u.total" gt 100)
         },
     )
   }
@@ -136,19 +156,24 @@ class SqlTest {
           append("top_u as (select * from u where u.total > 100) ")
           append("select * from top_u")
         },
-        sql {
-          with("u") {
-            select("count(*)" `as` "total", "name")
-            from("users")
-            groupBy("name")
+        stmt {
+          select {
+            with(
+                "u",
+                select("count(*)" `as` "total", "name") {
+                  from("users")
+                  groupBy("name")
+                },
+            )
+            with(
+                "top_u",
+                select {
+                  from("u")
+                  where("u.total" gt 100)
+                },
+            )
+            from("top_u")
           }
-          with("top_u") {
-            select()
-            from("u")
-            where("u.total" gt 100)
-          }
-          select()
-          from("top_u")
         },
     )
   }
@@ -163,21 +188,26 @@ class SqlTest {
           append("join user_posts as p on p.user_id = u.id ")
           append("where p.total > 10")
         },
-        sql {
-          with("active_users") {
-            select("id", "name")
-            from("users")
-            where("active" eq "true")
+        stmt {
+          select {
+            with(
+                "active_users",
+                select("id", "name") {
+                  from("users")
+                  where("active" eq "true")
+                },
+            )
+            with(
+                "user_posts",
+                select("user_id", "count(*)" `as` "total") {
+                  from("posts")
+                  groupBy("user_id")
+                },
+            )
+            from("active_users" `as` "u")
+            join(inner("user_posts" `as` "p") on ("p.user_id" eq "u.id"))
+            where("p.total" gt 10)
           }
-          with("user_posts") {
-            select("user_id", "count(*)" `as` "total")
-            from("posts")
-            groupBy("user_id")
-          }
-          select()
-          from("active_users" `as` "u")
-          join(inner("user_posts" `as` "p") on ("p.user_id" eq "u.id"))
-          where("p.total" gt 10)
         },
     )
   }
@@ -186,10 +216,11 @@ class SqlTest {
   fun `simple select order by desc`() {
     assertEquals(
         "select * from users order by created_at desc",
-        sql {
-          select()
-          from("users")
-          orderBy { desc("created_at") }
+        stmt {
+          select {
+            from("users")
+            orderBy { desc("created_at") }
+          }
         },
     )
   }
@@ -198,10 +229,11 @@ class SqlTest {
   fun `simple select order by two fields`() {
     assertEquals(
         "select * from users order by created_at desc, total asc",
-        sql {
-          select()
-          from("users")
-          orderBy { desc("created_at") asc ("total") }
+        stmt {
+          select {
+            from("users")
+            orderBy { desc("created_at") asc ("total") }
+          }
         },
     )
   }
@@ -218,15 +250,16 @@ class SqlTest {
           append("left join cte3 as c3 on c3.id = c1.id ")
           append("order by created_at desc, total asc")
         },
-        sql {
-          with("cte1") { select("id") from "table1" }
-          with("cte2") { select("id") from "table2" }
-          with("cte3") { select("id") from "table3" }
-          select()
-          from("cte1" `as` "c1")
-          join(inner("cte2" `as` "c2") on ("c2.id" eq "c1.id"))
-          join(left("cte3" `as` "c3") on ("c3.id" eq "c1.id"))
-          orderBy { desc("created_at") asc ("total") }
+        stmt {
+          select {
+            with("cte1", select("id") { from("table1") })
+            with("cte2", select("id") { from("table2") })
+            with("cte3", select("id") { from("table3") })
+            from("cte1" `as` "c1")
+            join(inner("cte2" `as` "c2") on ("c2.id" eq "c1.id"))
+            join(left("cte3" `as` "c3") on ("c3.id" eq "c1.id"))
+            orderBy { desc("created_at") asc ("total") }
+          }
         },
     )
   }
@@ -239,15 +272,16 @@ class SqlTest {
           append("case when total > 10 then :pass else :fail end ")
           append("from users")
         },
-        sql {
+        stmt {
           select(
               "name",
               case {
                 `when`("total" gt 10) then ":pass"
                 `else`(":fail")
               },
-          )
-          from("users")
+          ) {
+            from("users")
+          }
         },
     )
   }
@@ -256,8 +290,8 @@ class SqlTest {
   fun `select exists`() {
     assertEquals(
         "select exists (select 1 from users)",
-        sql {
-          select(exists { select(1) from "users" })
+        stmt {
+          select(exists(select(1) { from("users") }))
         },
     )
   }
@@ -266,8 +300,8 @@ class SqlTest {
   fun `select not exists`() {
     assertEquals(
         "select not exists (select 1 from users)",
-        sql {
-          select(!exists { select(1) from "users" })
+        stmt {
+          select(!exists(select(1) { from("users") }))
         },
     )
   }

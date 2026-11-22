@@ -10,7 +10,7 @@ import io.github.duartqx.ddql.interfaces.Statement
  * @property sql The subquery to evaluate.
  * @param negate Whether to negate the existence check. Defaults to `false`.
  */
-public class Exists(public val sql: Sql, private var negate: Boolean = false) : Statement {
+public class Exists(public val stmt: Statement, private var negate: Boolean = false) : Statement {
 
   /**
    * Toggles the existence check between EXISTS and NOT EXISTS.
@@ -25,8 +25,8 @@ public class Exists(public val sql: Sql, private var negate: Boolean = false) : 
    * @return The generated SQL expression.
    */
   override fun toString(): String {
-    val stmt = if (negate) "not exists" else "exists"
-    return "$stmt ($sql)"
+    val prefix = if (negate) "not exists" else "exists"
+    return "$prefix ($stmt)"
   }
 
   /**
@@ -58,4 +58,4 @@ public class Exists(public val sql: Sql, private var negate: Boolean = false) : 
  * @param block The builder used to construct the subquery.
  * @return An [Exists] expression wrapping the generated subquery.
  */
-public fun exists(block: Sql.() -> Unit): Exists = Exists(Sql().apply(block))
+public fun exists(stmt: Statement): Exists = Exists(stmt)

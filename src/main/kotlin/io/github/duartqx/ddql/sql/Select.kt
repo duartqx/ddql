@@ -11,8 +11,8 @@ import io.github.duartqx.ddql.interfaces.Statement
  * Supports common query clauses, including CTEs, joins, filtering, grouping, aggregation, and
  * ordering.
  */
-public class Sql : Statement {
-  private var selection = "*"
+public open class Select(vararg columns: Any) : Statement {
+  private var selection = columns.joinToString(", ", transform = { Expr(it).expr }).ifEmpty { "*" }
   private var table = ""
   private var whereClause = ""
   private var groupByClause = ""
@@ -25,28 +25,15 @@ public class Sql : Statement {
   /**
    * Adds a common table expression (CTE) to the query.
    *
-   * The provided builder configures a separate [Sql] instance whose result is associated with the
-   * given alias.
+   * The provided builder configures a separate [Select] instance whose result is associated with
+   * the given alias.
    *
    * @param alias The CTE name.
    * @param stmt The builder used to construct the CTE query.
    * @return This query instance.
    */
-  public fun with(alias: String, stmt: Sql.() -> Unit): Sql = apply {
-    ctes.add(alias to Sql().apply(stmt))
-  }
-
-  /**
-   * Defines the columns or expressions to retrieve.
-   *
-   * Accepts strings, [Statement] instances, and other supported expressions. Defaults to `*` when
-   * no columns are provided.
-   *
-   * @param columns The columns or expressions to select.
-   * @return This query instance.
-   */
-  public fun select(vararg columns: Any): Sql = apply {
-    selection = columns.joinToString(", ", transform = { Expr(it).expr }).ifEmpty { "*" }
+  public fun with(alias: String, stmt: Statement): Select = apply {
+    ctes.add(alias to stmt)
   }
 
   /**
@@ -55,7 +42,7 @@ public class Sql : Statement {
    * @param source The table name, subquery, or supported SQL expression.
    * @return This query instance.
    */
-  public infix fun from(source: Any): Sql = apply {
+  public fun from(source: Any): Select = apply {
     table = Expr(source).expr
   }
 
@@ -65,7 +52,7 @@ public class Sql : Statement {
    * @param statement The join definition.
    * @return This query instance.
    */
-  public infix fun join(statement: JoinStatement): Sql = apply {
+  public fun join(statement: JoinStatement): Select = apply {
     joins.add(statement)
   }
 
@@ -77,7 +64,7 @@ public class Sql : Statement {
    * @param expr The filtering expression.
    * @return This query instance.
    */
-  public infix fun where(expr: Expr): Sql = apply {
+  public fun where(expr: Expr): Select = apply {
     whereClause = "where ${expr.expr}"
   }
 
@@ -87,7 +74,7 @@ public class Sql : Statement {
    * @param expr The column or expression used to group rows.
    * @return This query instance.
    */
-  public infix fun groupBy(expr: Any): Sql = apply {
+  public fun groupBy(expr: Any): Select = apply {
     groupByClause = "group by ${Expr(expr).expr}"
   }
 
@@ -97,7 +84,7 @@ public class Sql : Statement {
    * @param expr The filtering expression.
    * @return This query instance.
    */
-  public infix fun having(expr: Any): Sql = apply {
+  public fun having(expr: Any): Select = apply {
     havingClause = "having ${Expr(expr).expr}"
   }
 
@@ -109,7 +96,7 @@ public class Sql : Statement {
    * @param builder The builder used to configure the ordering.
    * @return This query instance.
    */
-  public infix fun orderBy(builder: OrderBy.() -> Unit): Sql = apply {
+  public fun orderBy(builder: OrderBy.() -> Unit): Select = apply {
     orderBys.add(OrderBy().apply(builder))
   }
 
