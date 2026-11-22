@@ -12,6 +12,7 @@ public class Insert : Statement {
   private var columns = listOf<String>()
   private var from: Statement? = null
   private var onConflict: OnConflict? = null
+  private val returns: MutableList<Expr> = mutableListOf()
 
   public fun into(dest: String, vararg cols: String): Insert = apply {
     table = Expr(dest).expr
@@ -30,6 +31,10 @@ public class Insert : Statement {
     onConflict = OnConflict().apply(block)
   }
 
+  public fun returning(vararg columns: Any): Insert = apply {
+    returns.addAll(columns.map { Expr(it) })
+  }
+
   override fun toStatementString(): String {
     check(table.isNotEmpty()) { "You need to provide into what the insert will go" }
     check(columns.isNotEmpty()) { "You need to provide at least one column" }
@@ -40,6 +45,7 @@ public class Insert : Statement {
           add(columns.joinToString(", ", prefix = "(", postfix = ")"))
           add(from!!.toStatementString())
           if (onConflict != null) add(onConflict)
+          if (returns.isNotEmpty()) add(returns.joinToString(", ", prefix = "returning "))
         }
         .joinToString(" ")
   }

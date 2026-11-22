@@ -88,4 +88,58 @@ class InsertTest {
         },
     )
   }
+
+  @Test
+  fun `insert into table from values returning id`() {
+    assertEquals(
+        buildString {
+          append("insert into users (first_name, last_name) ")
+          append("values (:first_name, :last_name) ")
+          append("returning id")
+        },
+        stmt {
+          insert {
+            into("users", "first_name, last_name")
+            values(listOf(":first_name", ":last_name"))
+            returning("id")
+          }
+        },
+    )
+  }
+
+  @Test
+  fun `insert into table from values returning id as user_id`() {
+    assertEquals(
+        buildString {
+          append("insert into users (first_name, last_name) ")
+          append("values (:first_name, :last_name) ")
+          append("returning id as user_id")
+        },
+        stmt {
+          insert {
+            into("users", "first_name, last_name")
+            values(listOf(":first_name", ":last_name"))
+            returning("id" to "user_id")
+          }
+        },
+    )
+  }
+
+  @Test
+  fun `insert into table from values returning id and created_at`() {
+    assertEquals(
+        buildString {
+          append("insert into users (first_name, last_name) ")
+          append("values (:first_name, :last_name) ")
+          append("returning id, created_at")
+        },
+        stmt {
+          insert {
+            into("users", "first_name, last_name")
+            values(listOf(":first_name", ":last_name"))
+            returning("id", "created_at")
+          }
+        },
+    )
+  }
 }
