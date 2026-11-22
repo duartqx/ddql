@@ -1,38 +1,33 @@
 package io.github.duartqx.ddql.sql.dml
 
 import io.github.duartqx.ddql.expr.Eq.eq
+import io.github.duartqx.ddql.fixtures.assertStatementEquals
 import io.github.duartqx.ddql.insert
 import io.github.duartqx.ddql.select
-import io.github.duartqx.ddql.stmt
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class InsertTest {
   @Test
   fun `insert into table from values`() {
-    assertEquals(
+    assertStatementEquals(
         "insert into users (first_name, last_name) values (:first_name, :last_name)",
-        stmt {
-          insert {
-            into("users", "first_name, last_name")
-            values(listOf(":first_name", ":last_name"))
-          }
+        insert {
+          into("users", "first_name, last_name")
+          values(listOf(":first_name", ":last_name"))
         },
     )
   }
 
   @Test
   fun `insert into table from select`() {
-    assertEquals(
+    assertStatementEquals(
         "insert into users (first_name, last_name) select first_name, last_name from users where id = :id",
-        stmt {
-          insert {
-            into("users", "first_name, last_name")
-            from {
-              select("first_name", "last_name") {
-                from("users")
-                where(eq("id"))
-              }
+        insert {
+          into("users", "first_name, last_name")
+          from {
+            select("first_name", "last_name") {
+              from("users")
+              where(eq("id"))
             }
           }
         },
@@ -41,104 +36,92 @@ class InsertTest {
 
   @Test
   fun `insert into table on conflict do nothing`() {
-    assertEquals(
+    assertStatementEquals(
         "insert into users (first_name, last_name) values (:first_name, :last_name) on conflict do nothing",
-        stmt {
-          insert {
-            into("users", "first_name, last_name")
-            values(listOf(":first_name", ":last_name"))
-            onConflict { doNothing() }
-          }
+        insert {
+          into("users", "first_name, last_name")
+          values(listOf(":first_name", ":last_name"))
+          onConflict { doNothing() }
         },
     )
   }
 
   @Test
   fun `insert into table on conflict do update`() {
-    assertEquals(
+    assertStatementEquals(
         buildString {
           append("insert into users (first_name, last_name) ")
           append("values (:first_name, :last_name) ")
           append("on conflict do update set first_name = :first_name")
         },
-        stmt {
-          insert {
-            into("users", "first_name, last_name")
-            values(listOf(":first_name", ":last_name"))
-            onConflict { doUpdate { set("first_name", ":first_name") } }
-          }
+        insert {
+          into("users", "first_name, last_name")
+          values(listOf(":first_name", ":last_name"))
+          onConflict { doUpdate { set("first_name", ":first_name") } }
         },
     )
   }
 
   @Test
   fun `insert into table on conflict do update from excluded`() {
-    assertEquals(
+    assertStatementEquals(
         buildString {
           append("insert into users (first_name, last_name) ")
           append("values (:first_name, :last_name) ")
           append("on conflict do update set first_name = excluded.first_name")
         },
-        stmt {
-          insert {
-            into("users", "first_name, last_name")
-            values(listOf(":first_name", ":last_name"))
-            onConflict { doUpdate { set("first_name", excluded("first_name")) } }
-          }
+        insert {
+          into("users", "first_name, last_name")
+          values(listOf(":first_name", ":last_name"))
+          onConflict { doUpdate { set("first_name", excluded("first_name")) } }
         },
     )
   }
 
   @Test
   fun `insert into table from values returning id`() {
-    assertEquals(
+    assertStatementEquals(
         buildString {
           append("insert into users (first_name, last_name) ")
           append("values (:first_name, :last_name) ")
           append("returning id")
         },
-        stmt {
-          insert {
-            into("users", "first_name, last_name")
-            values(listOf(":first_name", ":last_name"))
-            returning("id")
-          }
+        insert {
+          into("users", "first_name, last_name")
+          values(listOf(":first_name", ":last_name"))
+          returning("id")
         },
     )
   }
 
   @Test
   fun `insert into table from values returning id as user_id`() {
-    assertEquals(
+    assertStatementEquals(
         buildString {
           append("insert into users (first_name, last_name) ")
           append("values (:first_name, :last_name) ")
           append("returning id as user_id")
         },
-        stmt {
-          insert {
-            into("users", "first_name, last_name")
-            values(listOf(":first_name", ":last_name"))
-            returning("id" to "user_id")
-          }
+        insert {
+          into("users", "first_name, last_name")
+          values(listOf(":first_name", ":last_name"))
+          returning("id" to "user_id")
         },
     )
   }
 
   @Test
   fun `insert into table from values returning id and created_at`() {
-    assertEquals(
+    assertStatementEquals(
         buildString {
           append("insert into users (first_name, last_name) ")
           append("values (:first_name, :last_name) ")
           append("returning id, created_at")
         },
-        stmt {
-          insert {
-            into("users", "first_name, last_name")
-            values(listOf(":first_name", ":last_name"))
-            returning("id", "created_at")
-          }
+        insert {
+          into("users", "first_name, last_name")
+          values(listOf(":first_name", ":last_name"))
+          returning("id", "created_at")
         },
     )
   }
