@@ -7,12 +7,12 @@ public typealias CteStatement = Pair<String, Statement>
 public typealias CteStatements = List<CteStatement>
 
 public open class Cte(
-    private val cte: CteStatements,
-    private val endStatement: Statement,
-    private val prefix: String = "with ",
+    private val ctes: CteStatements,
+    private val primary: Statement,
+    private val prefix: String = "with",
 ) : Statement {
   init {
-    require(cte.isNotEmpty()) { "no statements specified" }
+    require(ctes.isNotEmpty()) { "no statements specified" }
   }
 
   /**
@@ -23,18 +23,19 @@ public open class Cte(
    * @return The formatted WITH clause.
    */
   override fun toStatementString(): String = buildList {
+    add(prefix)
     add(
-        cte.joinToString(", ", prefix = prefix) { (alias, stmt) ->
+        ctes.joinToString(", ") { (alias, stmt) ->
           "$alias as (${stmt.toStatementString()})"
         }
     )
-    add(endStatement.toStatementString())
+    add(primary.toStatementString())
   }
       .joinToString(" ")
 }
 
 public class RecursiveCte(cte: CteStatements, endStatement: Statement) :
-    Cte(cte, endStatement, prefix = "with recursive ")
+    Cte(cte, endStatement, prefix = "with recursive")
 
 public fun with(vararg cte: CteStatement, endStatement: () -> Statement): Cte =
     Cte(cte.toList(), endStatement())
