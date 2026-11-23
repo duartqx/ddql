@@ -115,16 +115,17 @@ class SqlTest {
           append("with u as (select count(*) as total, name from users group by name) ")
           append("select * from u where u.total > 100")
         },
-        select {
-          with(
-              "u" `as`
-                  select("count(*)" `as` "total", "name") {
-                    from("users")
-                    groupBy("name")
-                  },
-          )
-          from("u")
-          where("u.total" gt 100)
+        with(
+            "u" `as`
+                select("count(*)" `as` "total", "name") {
+                  from("users")
+                  groupBy("name")
+                },
+        ) {
+          select {
+            from("u")
+            where("u.total" gt 100)
+          }
         },
     )
   }
@@ -137,20 +138,19 @@ class SqlTest {
           append("top_u as (select * from u where u.total > 100) ")
           append("select * from top_u")
         },
-        select {
-          with(
-              "u" `as`
-                  select("count(*)" `as` "total", "name") {
-                    from("users")
-                    groupBy("name")
-                  },
-              "top_u" `as`
-                  select {
-                    from("u")
-                    where("u.total" gt 100)
-                  },
-          )
-          from("top_u")
+        with(
+            "u" `as`
+                select("count(*)" `as` "total", "name") {
+                  from("users")
+                  groupBy("name")
+                },
+            "top_u" `as`
+                select {
+                  from("u")
+                  where("u.total" gt 100)
+                },
+        ) {
+          select { from("top_u") }
         },
     )
   }
@@ -165,22 +165,23 @@ class SqlTest {
           append("join user_posts as p on p.user_id = u.id ")
           append("where p.total > 10")
         },
-        select {
-          with(
-              "active_users" `as`
-                  select("id", "name") {
-                    from("users")
-                    where("active" eq "true")
-                  },
-              "user_posts" `as`
-                  select("user_id", "count(*)" `as` "total") {
-                    from("posts")
-                    groupBy("user_id")
-                  },
-          )
-          from("active_users" `as` "u")
-          join(inner("user_posts" `as` "p") on ("p.user_id" eq "u.id"))
-          where("p.total" gt 10)
+        with(
+            "active_users" `as`
+                select("id", "name") {
+                  from("users")
+                  where("active" eq "true")
+                },
+            "user_posts" `as`
+                select("user_id", "count(*)" `as` "total") {
+                  from("posts")
+                  groupBy("user_id")
+                },
+        ) {
+          select {
+            from("active_users" `as` "u")
+            join(inner("user_posts" `as` "p") on ("p.user_id" eq "u.id"))
+            where("p.total" gt 10)
+          }
         },
     )
   }
@@ -219,16 +220,17 @@ class SqlTest {
           append("left join cte3 as c3 on c3.id = c1.id ")
           append("order by created_at desc, total asc")
         },
-        select {
-          with(
-              "cte1" `as` select("id") { from("table1") },
-              "cte2" `as` select("id") { from("table2") },
-              "cte3" `as` select("id") { from("table3") },
-          )
-          from("cte1" `as` "c1")
-          join(inner("cte2" `as` "c2") on ("c2.id" eq "c1.id"))
-          join(left("cte3" `as` "c3") on ("c3.id" eq "c1.id"))
-          orderBy { desc("created_at") asc ("total") }
+        with(
+            "cte1" `as` select("id") { from("table1") },
+            "cte2" `as` select("id") { from("table2") },
+            "cte3" `as` select("id") { from("table3") },
+        ) {
+          select {
+            from("cte1" `as` "c1")
+            join(inner("cte2" `as` "c2") on ("c2.id" eq "c1.id"))
+            join(left("cte3" `as` "c3") on ("c3.id" eq "c1.id"))
+            orderBy { desc("created_at") asc ("total") }
+          }
         },
     )
   }

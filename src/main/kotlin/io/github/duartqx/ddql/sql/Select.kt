@@ -18,31 +18,8 @@ public open class Select(vararg columns: Any) : Statement {
   private var groupByClause = ""
   private var havingClause = ""
 
-  private var cte: Cte? = null
   private val joins = mutableListOf<JoinStatement>()
   private val orderBys = mutableListOf<OrderStatement>()
-
-  /**
-   * Adds a common table expression (CTE) to the query.
-   *
-   * The provided builder configures a separate [Select] instance whose result is associated with
-   * the given alias.
-   *
-   * @param alias The CTE name.
-   * @param stmt The builder used to construct the CTE query.
-   * @return This query instance.
-   */
-  public fun with(vararg statements: CteStatement): Select = apply {
-    cte = statements.toList().toCte()
-  }
-
-  public fun with(cte: Cte): Select = apply {
-    this.cte = cte
-  }
-
-  public fun with(recursive: RecursiveCte): Select = apply {
-    cte = recursive
-  }
 
   /**
    * Defines the source table or expression for the query.
@@ -116,8 +93,6 @@ public open class Select(vararg columns: Any) : Statement {
    * @return The generated SQL query.
    */
   public override fun toString(): String = buildList {
-    cte?.let { add(it.toStatementString()) }
-
     add("select $selection")
     if (table.isNotEmpty()) add("from $table")
     addAll(joins.map(JoinStatement::toJoinString))
