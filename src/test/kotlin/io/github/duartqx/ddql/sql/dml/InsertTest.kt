@@ -12,7 +12,8 @@ class InsertTest {
     assertStatementEquals(
         "insert into users (first_name, last_name) values (:first_name, :last_name)",
         insert {
-          into("users", "first_name, last_name")
+          into("users")
+          columns("first_name, last_name")
           values(":first_name", ":last_name")
         },
     )
@@ -23,7 +24,8 @@ class InsertTest {
     assertStatementEquals(
         "insert into users (first_name, last_name) select first_name, last_name from users where id = :id",
         insert {
-          into("users", "first_name, last_name")
+          into("users")
+          columns("first_name, last_name")
           from {
             select("first_name", "last_name") {
               from("users")
@@ -39,7 +41,8 @@ class InsertTest {
     assertStatementEquals(
         "insert into users (first_name, last_name) values (:first_name, :last_name) on conflict do nothing",
         insert {
-          into("users", "first_name, last_name")
+          into("users")
+          columns("first_name, last_name")
           values(":first_name", ":last_name")
           onConflict { doNothing() }
         },
@@ -55,7 +58,8 @@ class InsertTest {
           append("on conflict do update set first_name = :first_name")
         },
         insert {
-          into("users", "first_name, last_name")
+          into("users")
+          columns("first_name, last_name")
           values(":first_name", ":last_name")
           onConflict { doUpdate { set("first_name", ":first_name") } }
         },
@@ -71,7 +75,8 @@ class InsertTest {
           append("on conflict do update set first_name = excluded.first_name")
         },
         insert {
-          into("users", "first_name, last_name")
+          into("users")
+          columns("first_name, last_name")
           values(":first_name", ":last_name")
           onConflict { doUpdate { set("first_name", excluded("first_name")) } }
         },
@@ -87,7 +92,8 @@ class InsertTest {
           append("returning id")
         },
         insert {
-          into("users", "first_name, last_name")
+          into("users")
+          columns("first_name, last_name")
           values(":first_name", ":last_name")
           returning("id")
         },
@@ -103,7 +109,8 @@ class InsertTest {
           append("returning id as user_id")
         },
         insert {
-          into("users", "first_name, last_name")
+          into("users")
+          columns("first_name, last_name")
           values(":first_name", ":last_name")
           returning("id" to "user_id")
         },
@@ -119,7 +126,8 @@ class InsertTest {
           append("returning id, created_at")
         },
         insert {
-          into("users", "first_name, last_name")
+          into("users")
+          columns("first_name, last_name")
           values(":first_name", ":last_name")
           returning("id", "created_at")
         },

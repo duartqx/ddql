@@ -15,8 +15,11 @@ public class Insert : Statement {
   private var onConflict: OnConflict? = null
   private val returns: MutableList<Expr> = mutableListOf()
 
-  public fun into(dest: String, vararg cols: String): Insert = apply {
+  public fun into(dest: String): Insert = apply {
     table = Expr(dest).expr
+  }
+
+  public fun columns(vararg cols: String): Insert = apply {
     columns = cols.toList()
   }
 
