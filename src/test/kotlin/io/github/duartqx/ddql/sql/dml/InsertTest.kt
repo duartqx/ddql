@@ -13,7 +13,7 @@ class InsertTest {
         "insert into users (first_name, last_name) values (:first_name, :last_name)",
         insert {
           into("users", "first_name, last_name")
-          values(listOf(":first_name", ":last_name"))
+          values(":first_name", ":last_name")
         },
     )
   }
@@ -40,7 +40,7 @@ class InsertTest {
         "insert into users (first_name, last_name) values (:first_name, :last_name) on conflict do nothing",
         insert {
           into("users", "first_name, last_name")
-          values(listOf(":first_name", ":last_name"))
+          values(":first_name", ":last_name")
           onConflict { doNothing() }
         },
     )
@@ -56,7 +56,7 @@ class InsertTest {
         },
         insert {
           into("users", "first_name, last_name")
-          values(listOf(":first_name", ":last_name"))
+          values(":first_name", ":last_name")
           onConflict { doUpdate { set("first_name", ":first_name") } }
         },
     )
@@ -72,7 +72,7 @@ class InsertTest {
         },
         insert {
           into("users", "first_name, last_name")
-          values(listOf(":first_name", ":last_name"))
+          values(":first_name", ":last_name")
           onConflict { doUpdate { set("first_name", excluded("first_name")) } }
         },
     )
@@ -88,7 +88,7 @@ class InsertTest {
         },
         insert {
           into("users", "first_name, last_name")
-          values(listOf(":first_name", ":last_name"))
+          values(":first_name", ":last_name")
           returning("id")
         },
     )
@@ -104,7 +104,7 @@ class InsertTest {
         },
         insert {
           into("users", "first_name, last_name")
-          values(listOf(":first_name", ":last_name"))
+          values(":first_name", ":last_name")
           returning("id" to "user_id")
         },
     )
@@ -120,7 +120,7 @@ class InsertTest {
         },
         insert {
           into("users", "first_name, last_name")
-          values(listOf(":first_name", ":last_name"))
+          values(":first_name", ":last_name")
           returning("id", "created_at")
         },
     )

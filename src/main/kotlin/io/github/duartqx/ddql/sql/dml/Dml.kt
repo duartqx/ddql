@@ -10,6 +10,7 @@ public class Dml {
 public class Insert : Statement {
   private var table = ""
   private var columns = listOf<String>()
+  private val values = Values()
   private var from: Statement? = null
   private var onConflict: OnConflict? = null
   private val returns: MutableList<Expr> = mutableListOf()
@@ -19,8 +20,8 @@ public class Insert : Statement {
     columns = cols.toList()
   }
 
-  public fun values(vararg args: List<Any>): Insert = apply {
-    from = Values(*args)
+  public fun values(vararg args: Any): Insert = apply {
+    values.add(*args)
   }
 
   public fun from(block: () -> Statement): Insert = apply {
@@ -38,12 +39,14 @@ public class Insert : Statement {
   override fun toStatementString(): String {
     check(table.isNotEmpty()) { "You need to provide into what the insert will go" }
     check(columns.isNotEmpty()) { "You need to provide at least one column" }
-    checkNotNull(from) { "You need to provide values or a select" }
+    check(from != null || values.rows.isNotEmpty()) {
+      "You need to provide at least values or a source statement"
+    }
 
     return buildList {
           add("insert into $table")
           add(columns.joinToString(", ", prefix = "(", postfix = ")"))
-          add(from!!.toStatementString())
+          add(from?.toStatementString() ?: values.toStatementString())
           if (onConflict != null) add(onConflict)
           if (returns.isNotEmpty()) add(returns.joinToString(", ", prefix = "returning "))
         }
@@ -51,17 +54,21 @@ public class Insert : Statement {
   }
 }
 
-public class Values(vararg values: List<Any>) : Statement {
+public class Values : Statement {
 
-  internal val values = values.toList()
+  internal val rows = mutableListOf<List<Expr>>()
+
+  public fun add(vararg values: Any): Values = apply {
+    rows.add(values.map { Expr(it) })
+  }
 
   override fun toStatementString(): String {
-    require(values.isNotEmpty()) { "Values must not be empty" }
-    val valuesString =
-        values.joinToString(separator = ", ") {
+    require(rows.isNotEmpty()) { "Values must not be empty" }
+    val formatted =
+        rows.joinToString(separator = ", ") {
           it.joinToString(separator = ", ", prefix = "(", postfix = ")")
         }
-    return "values $valuesString"
+    return "values $formatted"
   }
 }
 
